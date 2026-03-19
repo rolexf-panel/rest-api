@@ -1,0 +1,140 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Pengguna {
+  id                     String    @id @default(uuid())
+  email                  String    @unique
+  kataSandi              String    @map("kata_sandi")
+  nama                   String?
+  peran                  String    @default("user")
+  tier                   String    @default("free")
+  emailTerverifikasi     Boolean   @default(false) @map("email_terverifikasi")
+  tokenVerifikasi        String?   @map("token_verifikasi")
+  tokenResetKataSandi    String?   @map("token_reset_kata_sandi")
+  kedaluwarsaReset       DateTime? @map("kedaluwarsa_reset")
+  createdAt              DateTime  @default(now()) @map("created_at")
+  updatedAt              DateTime  @updatedAt @map("updated_at")
+  deletedAt              DateTime? @map("deleted_at")
+
+  urlSingkats UrlSingkat[]
+  catatan     Catatan[]
+  file        FileUpload[]
+  apiKeys     ApiKey[]
+
+  @@map("pengguna")
+}
+
+model UrlSingkat {
+  id          String    @id @default(uuid())
+  kode        String    @unique
+  urlAsli     String    @map("url_asli")
+  judul       String?
+  klik        Int       @default(0)
+  penggunaId  String?   @map("pengguna_id")
+  pengguna    Pengguna? @relation(fields: [penggunaId], references: [id])
+  kedaluwarsa DateTime?
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  deletedAt   DateTime? @map("deleted_at")
+
+  @@index([kode])
+  @@index([penggunaId])
+  @@map("url_singkats")
+}
+
+model Catatan {
+  id          String    @id @default(uuid())
+  judul       String
+  konten      String
+  publik      Boolean   @default(true)
+  kedaluwarsa DateTime?
+  penggunaId  String?   @map("pengguna_id")
+  pengguna    Pengguna? @relation(fields: [penggunaId], references: [id])
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  deletedAt   DateTime? @map("deleted_at")
+
+  @@map("catatan")
+}
+
+model FileUpload {
+  id          String    @id @default(uuid())
+  namaAsli    String    @map("nama_asli")
+  namaSimpan  String    @unique @map("nama_simpan")
+  mimeType    String    @map("mime_type")
+  ukuran      BigInt
+  path        String
+  penggunaId  String?   @map("pengguna_id")
+  pengguna    Pengguna? @relation(fields: [penggunaId], references: [id])
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  deletedAt   DateTime? @map("deleted_at")
+
+  @@map("file_upload")
+}
+
+model KursMataUang {
+  id        String   @id @default(uuid())
+  kode      String   @unique
+  nama      String
+  kurs      Float
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("kurs_mata_uang")
+}
+
+model TokenBlacklist {
+  id          String   @id @default(uuid())
+  token       String   @unique
+  kedaluwarsa DateTime
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@map("token_blacklist")
+}
+
+model Broadcast {
+  id        String    @id @default(uuid())
+  judul     String
+  konten    String
+  tipe      String    @default("info")
+  aktif     Boolean   @default(true)
+  createdBy String?   @map("created_by")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  @@map("broadcast")
+}
+
+model ApiKey {
+  id                 String    @id @default(uuid())
+  nama               String
+  kunci              String    @unique @map("kunci")
+  kunciPrefix        String    @map("kunci_prefix")
+  aktif             Boolean   @default(true)
+  terakhirDigunakan  DateTime? @map("terakhir_digunakan")
+  penggunaId         String    @map("pengguna_id")
+  pengguna           Pengguna  @relation(fields: [penggunaId], references: [id])
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime  @updatedAt @map("updated_at")
+
+  @@index([kunci])
+  @@index([penggunaId])
+  @@map("api_key")
+}
+
+model PengaturanRateLimit {
+  id        String   @id @default(uuid())
+  paket     String   @unique
+  nama      String
+  limit     Int
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("pengaturan_rate_limit")
+}
